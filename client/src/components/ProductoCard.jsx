@@ -1,65 +1,63 @@
+import { Link } from "react-router-dom";
+import { useTask } from "../context/Task.context";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { useProducto } from "../context/Producto.context";
+dayjs.extend(utc);
 
-
-function ProductoCard({ product }) {
-    const {
-        sku,
-        nombre,
-        descripcion,
-        precio,
-        cantidad,
-        activo,
-    } = product;
-
-
-    const money = (value) => {
-        // Manejo seguro por si viene null/undefined
-        const val = typeof value === "number" ? value : Number(value);
-        if (Number.isNaN(val)) return "-";
-        return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(val);
-    };
-
+function ProductoCard({ producto }) {
+      const { deleteProducto } = useProducto()
+    
+    // Construimos la URL o base64 de la imagen si existe
+    const imagenSrc =
+        producto.imagen && typeof producto.imagen === "string"
+            ? producto.imagen.startsWith("data:")
+                ? producto.imagen
+                : `data:image/png;base64,${producto.imagen}`
+            : "https://via.placeholder.com/150?text=Sin+imagen"; // imagen por defecto
 
     return (
-        <article className="border rounded-lg p-4 shadow-sm bg-white flex flex-col">
-            <div className="flex items-start gap-3">
-                <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center text-xs text-gray-500">
-                    Imagen
+        <div className="bg-zinc-800 w-full max-w-4xl p-6 rounded-md shadow-lg mx-auto">
+            <header className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-4">
+                    {/* Imagen del producto con ajuste automático */}
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-zinc-700 flex items-center justify-center">
+                        <img
+                            src={imagenSrc}
+                            alt={producto.nombre}
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+
                 </div>
-                <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-gray-800 truncate">{nombre}</h3>
-                    <p className="text-xs text-gray-500">SKU: <span className="font-mono">{sku}</span></p>
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-3">{descripcion || "Sin descripción"}</p>
+
+                <div className="flex  gap-2">
+                    <button
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                        onClick={() => deleteProducto(producto._id)}
+                    >
+                        Desactivar
+                    </button>
+
+                    <Link
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-center"
+                        to={`/producto/${producto._id}`}
+                    >
+                        Editar
+                    </Link>
                 </div>
+            </header>
+
+            <div className="text-slate-300 space-y-1">
+                <h1 className="text-2xl font-bold text-white">{producto.nombre}</h1>
+                <p><strong>SKU:</strong> {producto.sku || "Sin SKU"}</p>
+                <p><strong>Categoría:</strong> {producto.categoria.nombre || "Sin categoría"}</p>
+                <p><strong>Precio:</strong> {producto.precio || "Sin categoría"}</p>
+                <p><strong>Cantidad:</strong> {producto.cantidad || "Sin categoría"}</p>
+
             </div>
-
-
-            <div className="mt-4 flex items-center justify-between gap-2">
-                <div>
-                    <div className="text-sm text-gray-500">Precio</div>
-                    <div className="font-medium text-gray-900">{money(precio)}</div>
-                </div>
-
-
-                <div className="text-right">
-                    <div className="text-sm text-gray-500">Stock</div>
-                    <div className={`font-medium ${cantidad > 0 ? "text-green-600" : "text-red-600"}`}>{cantidad}</div>
-                </div>
-
-
-                <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                </div>
-            </div>
-
-
-            <div className="mt-4 flex gap-2">
-                <button className="flex-1 py-2 rounded-md border border-gray-200 text-sm hover:bg-gray-50">Ver</button>
-                <button className="py-2 px-4 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">Editar</button>
-            </div>
-        </article>
+        </div>
     );
 }
 
-export default ProductoCard
+export default ProductoCard;

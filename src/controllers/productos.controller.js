@@ -1,119 +1,267 @@
+import Producto from "../models/productos.model.js";
+// Importaciones necesarias para manejar archivos en disco
+import fs from 'fs';
+import path from 'path';
 
-import Producto from "../models/productos.model.js"
+// --- FUNCIONES AUXILIARES PARA MANEJO DE ARCHIVOS ---
+// Definimos las funciones auxiliares para que estén disponibles en este controlador
+const getFilePath = (relativePath) => {
+    // path.resolve() asegura que la ruta sea absoluta desde la raíz del proyecto
+    return path.join(path.resolve(), relativePath);
+};
+
+const deleteFileIfExists = (filePath) => {
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            //console.log(`Archivo eliminado: ${filePath}`);
+        }
+    } catch (err) {
+        console.error(`Error al intentar eliminar el archivo ${filePath}:`, err);
+    }
+};
+// ----------------------------------------------------
+
 
 export const crearProducto = async (req, res) => {
     try {
-        const { sku, nombre, descripcion, precio, cantidad } = req.body
+        const { sku, nombre, descripcion, codigo, precio, cantidad, categoria } = req.body;
 
+        // Verificar si ya existe el SKU
         const productFound = await Producto.findOne({ sku });
+        if (productFound) return res.status(400).json(["SKU ya registrado"]);
 
-        if (productFound)
-            return res.status(400).json(["SKU ya registrado"]);
+    // Obtener la ruta del archivo si Multer lo ha guardado en disco
+    let imagenPath = undefined;
+    let imagenMimeType = undefined;
 
-        const nuevoProducto = Producto({
-            sku,
-            nombre,
-            descripcion,
-            precio,
-            cantidad
-        })
-        const savedProduct = await nuevoProducto.save()
-        res.json(savedProduct)
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
+    if (req.file) {
+        // Multer con diskStorage almacena el archivo y nos da la ruta temporal
+        // Usamos req.file.filename para construir la ruta relativa que guardaremos en DB
+        imagenPath = `/uploads/${req.file.filename}`;
+        imagenMimeType = req.file.mimetype || "image/png";
+        
+       // console.log("DEBUG: Archivo guardado en disco. Ruta relativa:", imagenPath);
     }
 
-}
+    const nuevoProducto = new Producto({
+    sku,
+    nombre,
+      descripcion,
+      codigo,
+      precio,
+      cantidad,
+      categoria,
+      imagen: imagenPath, // Guardamos la RUTA (string)
+      imagenMimeType: imagenMimeType, // Guardamos el MIME Type
+    });
 
+
+    const npr = await nuevoProducto.save();
+    res.status(201).json(npr);
+  } catch (error) {
+    console.error("Error en crearProducto:", error);
+    // Si falla la subida a DB, intentar eliminar el archivo que Multer ya guardó.
+    if (req.file) {
+        deleteFileIfExists(req.file.path); 
+    }
+    res.status(500).json({ error: "Error al crear producto" });
+  }
+};
+
+
+export const updateProducto = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar producto actual
+    const producto = await Producto.findById(id);
+    if (!producto) return res.status(404).json(["Producto no found"]);
+    
+    const productoSku = await Producto.findOne({ sku: req.body.sku });
+
+    if(productoSku && req.body.sku == productoSku.sku )
+    {
+        if(producto.id != productoSku.id)
+        {
+            res.status(400).json(["SKU ya registrado por otro producto"]);
+        }
+    }
+    // Si el body trae sku y es diferente, asegurar unicidad
+  /*  if (req.body.sku && req.body.sku !== producto.sku) {
+      const skuExist = await Producto.findOne({ sku: req.body.sku });
+      if (skuExist) return res.status(400).json(["SKU ya registrado por otro producto"]);
+    }*/
+
+    // Si subieron nueva imagen, reemplazar la imagen almacenada en el documento
+    if (req.file) {
+      // Si el producto anterior tenía una imagen, intentamos borrarla del disco
+      if (producto.imagen && typeof producto.imagen === "string") {
+        const oldPath = getFilePath(producto.imagen);
+        deleteFileIfExists(oldPath);
+      }
+
+      // Asignar la nueva ruta y el MIME type
+      producto.imagen = `/uploads/${req.file.filename}`;
+      producto.imagenMimeType = req.file.mimetype || "image/png";
+    }
+
+    // Actualizar campos (si vienen en req.body)
+    const fields = ["sku", "nombre", "descripcion", "codigo", "precio", "cantidad", "activo", "categoria"];
+    fields.forEach((f) => {
+      if (typeof req.body[f] !== "undefined") {
+        producto[f] = req.body[f];
+      }
+    });
+
+    const saved = await producto.save();
+    res.json(saved);
+  } catch (error) {
+    console.error("Error en updateProducto:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
 export const getProductos = async (req, res) => {
   try {
-    // Filtra solo los productos activos
-    const productos = await Producto.find({ activo: true });
-    res.json(productos);
+    // Traer todos los productos activos
+   /// const productos = await Producto.find({ activo: true });
+    const productos = await Producto.find({ activo: true }).populate("categoria", "nombre codigo");
+    console.log("Se inprimen productos",productos)
+    // Preparar la respuesta: leer el archivo de imagen para cada producto
+    const productosConImagen = productos.map(producto => {
+      return prepareProductResponse(producto);
+    });
+
+    // Como prepareProductResponse es síncrona, esperamos todos los resultados
+    res.json(productosConImagen);
+
   } catch (error) {
+    console.error("Error en getProductos:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 export const getProductosDesactivados = async (req, res) => {
   try {
-    // Filtra solo los productos activos
     const productos = await Producto.find({ activo: false });
-    res.json(productos);
+    
+    const productosConImagen = productos.map(producto => {
+      return prepareProductResponse(producto);
+    });
+    
+    res.json(productosConImagen);
   } catch (error) {
+    console.error("Error en getProductosDesactivados:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getProducto = async (req, res) => {
+  try {
+     const producto = await Producto.findById(req.params.id).populate("categoria", "nombre codigo");
+    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
+    
+    const productoFinal = prepareProductResponse(producto);
+   // console.log(productoFinal)
+    res.json(productoFinal);
+    
+  } catch (error) {
+    console.error("Error en getProducto:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 
+// NUEVA FUNCIÓN AUXILIAR para leer el archivo de disco y generar la Data URL
+const prepareProductResponse = (producto) => {
+    // Convertir el documento de Mongoose a un objeto simple para añadir la imagen
+    const productoObj = producto.toObject ? producto.toObject() : producto;
+    
+    let imagenDataUrl = null;
+    // Verificar si hay una ruta de imagen guardada en el campo 'imagen'
+    if (productoObj.imagen && typeof productoObj.imagen === "string") {
+        const filePath = getFilePath(productoObj.imagen); // Obtener la ruta absoluta
+        
+        try {
+            // Leer el archivo de forma síncrona
+            const buffer = fs.readFileSync(filePath);
 
-export const getProducto = async (req, res) => {
-    try {
-      console.log(req.params.id)
-        const producto = await Producto.findById(req.params.id)
-        if (!producto) return res.status(404).json({ message: "Task no found" })
-        res.json(producto)
-
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-
+            // Generar la Data URL
+            const mime = productoObj.imagenMimeType || "image/png";
+            imagenDataUrl = `data:${mime};base64,${buffer.toString("base64")}`;
+            
+            // DEBUG: 
+            console.log(`DEBUG: Imagen leída de disco (${productoObj.imagen}). Tamaño: ${buffer.length} bytes.`);
+            
+        } catch (err) {
+            console.warn(`WARN: No se pudo leer el archivo de imagen en la ruta: ${filePath}. Error: ${err.message}`);
+            // Si el archivo no existe en disco, simplemente no se envía la imagen.
+        }
     }
 
-}
+    // Devolver el objeto modificado, eliminando el campo de imagen original
+    // y añadiendo la data URL.
+    delete productoObj.imagen; 
+    productoObj.imagen = imagenDataUrl;
 
+    return productoObj;
+};
+
+
+// controllers/producto.controller.js (o donde tengas la función)
+export const getProductoXCodigo = async (req, res) => {
+  try {
+    console.log("entra")
+    // usar findOne para traer un solo documento
+    const producto = await Producto.findOne({ codigo: req.params.codigo });
+    console.log("primer producto", producto)
+    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
+    
+    // Usamos la función auxiliar para leer el archivo de disco y preparar la respuesta
+    const productoFinal = prepareProductResponse(producto);
+    console.log("entra", productoFinal)
+    // responder sólo los campos necesarios (incluye imagenDataUrl o null)
+    res.json(productoFinal);
+
+  } catch (err) {
+    console.error("Error en getProductoXCodigo:", err);
+    res.status(500).json({ message: "Error al obtener producto" });
+  }
+};
 
 export const deleteProducto = async (req, res) => {
   try {
-    // Busca y actualiza el producto
-    const producto = await Producto.findByIdAndUpdate(
+  
+    
+    // 3. Desactivar el producto en la base de datos (soft delete)
+    const productoDesactivado = await Producto.findByIdAndUpdate(
       req.params.id,
-      { activo: false },             // Cambia el estado a inactivo
-      { new: true }                  // Devuelve el documento actualizado
+      { activo: false }, // Opcional: limpiar la referencia en DB
+      { new: true }
     );
 
-    // Si no se encontró el producto
-    if (!producto) {
-      return res.status(404).json(["Producto no encontrado"]);
-    }
-
-    // Devuelve una respuesta exitosa
     return res.sendStatus(204);
   } catch (error) {
+    console.error("Error en deleteProducto:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 export const activarProducto = async (req, res) => {
   try {
-    // Busca y actualiza el producto
     const producto = await Producto.findByIdAndUpdate(
       req.params.id,
-      { activo: true },             // Cambia el estado a inactivo
-      { new: true }                  // Devuelve el documento actualizado
+      { activo: true },
+      { new: true }
     );
 
-    // Si no se encontró el producto
     if (!producto) {
       return res.status(404).json(["Producto no encontrado"]);
     }
 
-    // Devuelve una respuesta exitosa
     return res.sendStatus(204);
   } catch (error) {
+    console.error("Error en activarProducto:", error);
     return res.status(500).json({ message: error.message });
   }
 };
-
-
-export const updateProducto = async (req, res) => {
-    try {
-        const producto = await Producto.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        if (!producto) return res.status(404).json(["Producto no found"])
-        res.json(producto)
-
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-
-    }
-
-}

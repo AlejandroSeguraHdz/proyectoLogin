@@ -1,50 +1,66 @@
 import { createContext, useContext, useState } from "react";
-import { createProductoRequest, deleteProductoRequest, getProductosRequest, getProductoRequest, updateProductoRequest, getProductosDesactivadosRequest, activarProductoRequest } from "../api/Producto";
+import { createProductoRequest, deleteProductoRequest, getProductosRequest, getProductoRequest, updateProductoRequest, getProductosDesactivadosRequest, activarProductoRequest, getProductoXCodigoRequest } from "../api/Producto";
 const ProductoContext = createContext();
 
 export const useProducto = () => {
     try {
         const context = useContext(ProductoContext);
-    
-   if (!context) {
-        throw new Error("useTask must be used widthin a TaskProvider")
-    }
-    return context;
-        
+
+        if (!context) {
+            throw new Error("useTask must be used widthin a TaskProvider")
+        }
+        return context;
+
     } catch (error) {
-        console.log("errores de useProducto",error)
+        console.log("errores de useProducto", error)
     }
 }
 
 export function ProductoProvider({ children }) {
     const [productos, setProductos] = useState([]);
+    const [producto, setProducto] = useState([]);
 
-    const createProducto = async (producto) => {
-    {
-            try {
-                console.log(producto)
-                const res = await createProductoRequest(producto)
-             } catch (error) {
-                console.log(error)
 
-            }
+    /*  const createProducto = async (producto) => {
+      {
+              try {
+                  console.log(producto)
+                  const res = await createProductoRequest(producto)
+               } catch (error) {
+                  console.log(error)
+  
+              }
+          }
+      }
+  */
+
+    const createProducto = async (productoFormData) => {
+        try {
+            console.log("createProducto -> sending:", productoFormData);
+            const res = await createProductoRequest(productoFormData);
+            // opcional: refrescar lista
+            await getProductos();
+            return res.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
         }
-    }
+    };
 
     const getProductos = async () => {
         try {
             const res = await getProductosRequest()
-             setProductos(res.data)
+            setProductos(res.data)
         } catch (error) {
             console.log(error)
         }
     }
 
-        const getProductosDesactivados = async () => {
+    const getProductosDesactivados = async () => {
         try {
             const res = await getProductosDesactivadosRequest()
             console.log(res)
-             setProductos(res.data)
+            setProductos(res.data)
         } catch (error) {
             console.log(error)
         }
@@ -62,7 +78,7 @@ export function ProductoProvider({ children }) {
 
     }
 
-    
+
     const activarProducto = async (id) => {
 
         try {
@@ -76,7 +92,20 @@ export function ProductoProvider({ children }) {
     const getOnlyOneProducto = async (id) => {
         try {
             const res = await getProductoRequest(id)
-            return res.data
+            setProducto(res.data)
+
+        } catch (error) {
+            console.log(error)
+
+        }
+    }
+
+    const getProductoXCodigo = async (codigo) => {
+        try {
+            const res = await getProductoXCodigoRequest(codigo)
+            console.log(res)
+            setProducto(res.data)
+          
 
         } catch (error) {
             console.log(error)
@@ -85,7 +114,7 @@ export function ProductoProvider({ children }) {
     }
     const updateProducto = async (id, producto) => {
         try {
-             await updateProductoRequest(id, producto);
+            await updateProductoRequest(id, producto);
         } catch (error) {
             console.error(error);
         }
@@ -95,13 +124,15 @@ export function ProductoProvider({ children }) {
         <ProductoContext.Provider
             value={{
                 productos,
+                producto,
                 createProducto,
                 getProductos,
                 deleteProducto,
                 getOnlyOneProducto,
                 updateProducto,
                 getProductosDesactivados,
-                activarProducto
+                activarProducto,
+                getProductoXCodigo
             }}
         >
             {children}
