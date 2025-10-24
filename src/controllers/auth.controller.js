@@ -2,103 +2,70 @@ import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
 import { createAccessToken } from "../libs/jwt.js"
 import { TOKEN_SECRET } from "../config.js";
-import jwt  from "jsonwebtoken";
-/*export const register = async (req, res) => {
-
+import jwt from "jsonwebtoken";
+ 
+export const register = async (req, res) => {
     try {
+        const { noEmpleado, nombres, apellidoP, apellidoM, email, password } = req.body;
 
+        const userFound = await User.findOne({ noEmpleado });
 
-        const { email, password, username } = req.body;
-
-        const userFound = await User.findOne({ email });
         if (userFound)
-            return res.status(400).json(["The email is alredy in use"])
+            return res.status(400).json(["El nuero de empleado ya esta registrado"]);
 
-        const passwordhash = await bcrypt.hash(password, 10)
-        const newUSer = User({
-            username,
+        const userFound2 = await User.findOne({ email });
+
+        if (userFound2)
+            return res.status(400).json(["El email ya esta registrado"]);
+
+
+        // hashing the password
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        // creating the user
+        const newUser = new User({
+            noEmpleado,
+            nombres,
+            apellidoP,
+            apellidoM,
             email,
-            password: passwordhash,
+            password: passwordHash,
+        });
 
-        })
-        const userSaved = await newUSer.save()
+        // saving the user in the database
+        const userSaved = await newUser.save();
 
-        const token = await createAccessToken({ id: userSaved.id })
-        res.cookie('token', token, { sameSite: "none" })
-        return res.status(200)
 
+
+        res.json({
+            id: userSaved._id,
+            noEmpleado: userSaved.noEmpleado,
+            nombres: userSaved.nombres,
+            apellidoP: userSaved.apellidoP,
+            apellidoM: userSaved.apellidoM,
+            email: userSaved.email,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-*/
-export const register = async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    const userFound = await User.findOne({ username });
-
-    if (userFound)
-      return res.status(400).json(["The username is already in use"]);
-      
-    const userFound2 = await User.findOne({ email });
-
-    if (userFound2)
-      return res.status(400).json(["The email is already in use"]);
-
-
-    // hashing the password
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // creating the user
-    const newUser = new User({
-      username,
-      email,
-      password: passwordHash,
-    });
-
-    // saving the user in the database
-    const userSaved = await newUser.save();
-
-    // create access token
-    const token = await createAccessToken({
-      id: userSaved._id,
-    });
-        res.cookie("token", token, {
-            sameSite: "none",
-            secure: true,
-            httpOnly: false,
-
-
-        });
-
-    res.json({
-      id: userSaved._id,
-      username: userSaved.username,
-      email: userSaved.email,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 export const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const userFound = await User.findOne({ username });
-        console.log(username)
-        if (!userFound)
-            return res.status(400).json(["The username does not exist"]);
+        const { noEmpleado, password } = req.body;
+        const userFound = await User.findOne({ noEmpleado });
+         if (!userFound)
+            return res.status(400).json(["El numero de empleado no existe"]);
 
         const isMatch = await bcrypt.compare(password, userFound.password);
         if (!isMatch) {
-            return res.status(400).json( ["The password is incorrect"],);
+            return res.status(400).json(["Contraseña incorrecta"],);
         }
 
         const token = await createAccessToken({
             id: userFound._id,
-            username: userFound.username,
+            noEmpleado: userFound.noEmpleado,
+            nombres: userFound.nombres,
         });
 
         res.cookie("token", token, {
@@ -110,9 +77,9 @@ export const login = async (req, res) => {
         });
 
         res.json({
-            id: userFound._id,
-            username: userFound.username,
-            email: userFound.email,
+             id: userFound._id,
+            noEmpleado: userFound.noEmpleado,
+            nombres: userFound.nombres,
         });
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -127,34 +94,19 @@ export const logout = (req, res) => {
     return res.sendStatus(200)
 }
 
-export const profile = async (req, res) => {
-    const userFound = await User.findById(req.user.id)
-    console.log("id ", req.user.id)
-    if (!userFound)
-        return res.status(400).json(["User not found"]);
-    console.log("userFound ", userFound.id)
-    return res.json({
-        id: userFound.id,
-        username: userFound.username,
-        email: userFound.email,
-        password: userFound.password
-    })
-
-
-}
 export const verifyToken = async (req, res) => {
     const { token } = req.cookies
-    if (!token) return res.status(401).json(["Unauthorized" ])
+    if (!token) return res.status(401).json(["Unauthorized"])
 
     jwt.verify(token, TOKEN_SECRET, async (error, user) => {
-        if (error) return res.status(401).json(["Unauthorized" ])
+        if (error) return res.status(401).json(["Unauthorized"])
 
         const userFound = await User.findById(user.id)
-        if (!userFound) return res.status(401).json(["Unauthorized" ])
+        if (!userFound) return res.status(401).json(["Unauthorized"])
 
         return res.json({
             id: userFound._id,
-            username: userFound.username,
+            noEmpleado: userFound.noEmpleado,
             email: userFound.email
         })
     })

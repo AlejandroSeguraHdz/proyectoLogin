@@ -16,7 +16,7 @@ app.use(
     origin: FRONTEND_URL,
   }))
 
-  app.use(express.json({
+app.use(express.json({
     limit: '10mb' // Acepta hasta 10 Megabytes de JSON.
 }));
 

@@ -19,7 +19,7 @@ function LoginPage() {
     });
 
     useEffect(()=>{
-            if(isAuthenticated) navigate("/task")
+            if(isAuthenticated) navigate("/producto")
     },[isAuthenticated])
     return (
         <div className=" flex h-[calc(100vh-100px)] items-center justify-center" >
@@ -37,10 +37,10 @@ function LoginPage() {
                 <form onSubmit={onSubmit}
                 >
 
-                    <input type="text" {...register('username', { required: true })}
+                    <input type="text" {...register('noEmpleado', { required: true })}
                         className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2"
-                        placeholder="username" />
-                    {errors.username && <p className="text-red-500"> Username is required </p>}
+                        placeholder="noEmpleado" />
+                    {errors.noEmpleado && <p className="text-red-500"> Numero de empleado es requerido </p>}
 
                     <input type="password"{...register('password', { required: true })}
                         className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2"

@@ -59,7 +59,7 @@ function PageUsuarios() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Link
-            to="/add-usuario"
+            to="/register"
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
           >
             Agregar Usuario

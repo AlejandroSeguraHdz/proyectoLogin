@@ -23,8 +23,7 @@ function PageProductos() {
 
     const setCats = new Set();
     productos.forEach((p) => {
-      console.log("producto",p)
-      if (p.categoria) setCats.add(p.categoria.nombre);
+       if (p.categoria) setCats.add(p.categoria.nombre);
     });
     return ["all", ...Array.from(setCats)];
   }, [productos]);

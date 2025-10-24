@@ -12,7 +12,7 @@ function NavBar() {
                 {isAuthenticated ? (
                     <>
                         <li>
-                            Bienvenido {user.username}
+                            Bienvenido {user.nombres}
                         </li>
 
 
@@ -25,6 +25,12 @@ function NavBar() {
                             <Link to='/usuarios'
                                 className="bg-indigo-500 px-4 py-1 rounded-sd"> Usuarios</Link>
                         </li>
+                          <li>
+                            <Link to='/compras'
+                                className="bg-indigo-500 px-4 py-1 rounded-sd"> Compra</Link>
+                        </li>
+                     
+                     
                         
                         <li>
                             <Link onClick={() => { logOut() }}
@@ -39,11 +45,7 @@ function NavBar() {
                             <Link to='/login'
                                 className="bg-indigo-500 px-4 py-1 rounded-sd"> Login</Link>
                         </li>
-                        <li
-                            className="bg-indigo-500 px-4 py-1 rounded-sd">
-                            <Link to='/register'> Register</Link>
-
-                        </li>
+                    
                     </>
                 )
                 }

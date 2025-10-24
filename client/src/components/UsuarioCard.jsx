@@ -40,13 +40,9 @@ function UsuarioCard({ usuario }) {
          
 
           <div>
-            <h1 className="text-2xl font-bold text-white">{usuario.username}</h1>
-            <p className="text-slate-300">{usuario.email}</p>
-            {usuario.createdAt && (
-              <p className="text-xs text-slate-400">
-                Creado: {dayjs(usuario.createdAt).format("DD/MM/YYYY HH:mm")}
-              </p>
-            )}
+            <h1 className="text-2xl font-bold text-white">{usuario.noEmpleado}</h1>
+            <p className="text-slate-300">{usuario.nombres+" "+usuario.apellidoP+" "+usuario.apellidoM}</p>
+        
           </div>
         </div>
 

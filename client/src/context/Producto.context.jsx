@@ -20,24 +20,11 @@ export function ProductoProvider({ children }) {
     const [productos, setProductos] = useState([]);
     const [producto, setProducto] = useState([]);
 
-
-    /*  const createProducto = async (producto) => {
-      {
-              try {
-                  console.log(producto)
-                  const res = await createProductoRequest(producto)
-               } catch (error) {
-                  console.log(error)
-  
-              }
-          }
-      }
-  */
+ 
 
     const createProducto = async (productoFormData) => {
         try {
-            console.log("createProducto -> sending:", productoFormData);
-            const res = await createProductoRequest(productoFormData);
+             const res = await createProductoRequest(productoFormData);
             // opcional: refrescar lista
             await getProductos();
             return res.data;
@@ -59,8 +46,7 @@ export function ProductoProvider({ children }) {
     const getProductosDesactivados = async () => {
         try {
             const res = await getProductosDesactivadosRequest()
-            console.log(res)
-            setProductos(res.data)
+             setProductos(res.data)
         } catch (error) {
             console.log(error)
         }
@@ -99,12 +85,23 @@ export function ProductoProvider({ children }) {
 
         }
     }
-
+/*
     const getProductoXCodigo = async (codigo) => {
         try {
             const res = await getProductoXCodigoRequest(codigo)
-            console.log(res)
-            setProducto(res.data)
+             setProducto(res.data)
+          
+
+        } catch (error) {
+            console.log(error)
+
+        }
+    }*/
+
+            const getProductoXCodigo = async (codigo) => {
+        try {
+            const res = await getProductoXCodigoRequest(codigo)
+              return res.data
           
 
         } catch (error) {

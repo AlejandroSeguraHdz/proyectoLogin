@@ -52,9 +52,7 @@ export const AuthProvider = ({ children }) => {
         try {
             setErrors([]); 
             const res = await registerRequest(user);
-            setUser(res.data);
-            setIsAunthenticated(true);
-            return res;
+              return res;
         } catch (error) {
 
             // Usa la función para obtener los mensajes limpios
@@ -66,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     const singin = async (user) => {
         try {
             const res = await loginRequest(user);
+            console.log(res)
             setIsAunthenticated(true);
             setUser(res.data);
             return res;

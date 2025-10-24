@@ -22,6 +22,9 @@ import FormCategorias from "./pages/FormCategorias.jsx"
 import PageLector from "./pages/PageLector.jsx"
 import PageUsuarios from "./pages/PageUsuarios.jsx"
 import { UsuarioProvider } from "./context/Usuario.context.jsx"
+import { CarritoProvider } from "./context/Carrito.context.jsx"
+import PageCompras from "./pages/PageCompras.jsx"
+import PagePruebas from "./pages/PagePruebas.jsx"
 
 function App() {
   return (
@@ -29,43 +32,47 @@ function App() {
       <UsuarioProvider>
         <TaskProvider>
           <ProductoProvider>
-            <CategoriaProvider>
-              <BrowserRouter>
-                <main className="container mx-auto px-10">
-                  <NavBar />
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
+            <CarritoProvider>
+              <CategoriaProvider>
+                <BrowserRouter>
+                  <main className="container mx-auto px-10">
+                    <NavBar />
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
 
 
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/task" element={<TaskPage />} />
-                      <Route path="/add-task" element={<TaskFormPage />} />
-                      <Route path="/task/:id" element={<TaskFormPage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
-                      <Route path="/producto" element={<PageProductos />} />
-                      <Route path="/add-producto" element={<FormProductos />} />
-                      <Route path="/producto/:id" element={<FormProductos />} />
-                      <Route path="/productos-desactivados" element={<PaginaProductosDesactivados />} />
-                      <Route path="/producto-tabla" element={<PaginaProducto />} />
-                      <Route path="/producto-configurar/:id" element={<PaginaConfiguracionProducto />} />
-                      <Route path="/categorias" element={<PageCategorias />} />
-                      <Route path="/add-categoria" element={<FormCategorias />} />
-                      <Route path="/categorias/:id" element={<FormCategorias />} />
-                      <Route path="/Lector" element={<PageLector />} />
-                      <Route path="/Usuarios" element={<PageUsuarios />} />
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="/register" element={<RegisterPage />} />
+
+                        <Route path="/task" element={<TaskPage />} />
+                        <Route path="/add-task" element={<TaskFormPage />} />
+                        <Route path="/task/:id" element={<TaskFormPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/producto" element={<PageProductos />} />
+                        <Route path="/add-producto" element={<FormProductos />} />
+                        <Route path="/producto/:id" element={<FormProductos />} />
+                        <Route path="/productos-desactivados" element={<PaginaProductosDesactivados />} />
+                        <Route path="/producto-tabla" element={<PaginaProducto />} />
+                        <Route path="/producto-configurar/:id" element={<PaginaConfiguracionProducto />} />
+                        <Route path="/categorias" element={<PageCategorias />} />
+                        <Route path="/add-categoria" element={<FormCategorias />} />
+                        <Route path="/categorias/:id" element={<FormCategorias />} />
+                        <Route path="/Lector" element={<PageLector />} />
+                        <Route path="/Usuarios" element={<PageUsuarios />} />
+                        <Route path="/compras" element={<PageCompras />} />
+                         <Route path="/pruebas" element={<PagePruebas />} />
 
 
 
 
 
-
-                    </Route>
-                  </Routes>
-                </main>
-              </BrowserRouter>
-            </CategoriaProvider>
+                      </Route>
+                    </Routes>
+                  </main>
+                </BrowserRouter>
+              </CategoriaProvider>
+            </CarritoProvider>
           </ProductoProvider>
         </TaskProvider>
       </UsuarioProvider>
