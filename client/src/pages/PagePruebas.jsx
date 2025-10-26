@@ -6,7 +6,7 @@ import { useCarrito } from "../context/Carrito.context";
 import { useForm } from "react-hook-form";
 
 function PagePruebas() {
-  const { carrito, addProducto } = useCarrito();
+  const { carrito, addProducto,getVentas } = useCarrito();
     const { register, setValue, handleSubmit, reset } = useForm();
   
  
@@ -16,7 +16,7 @@ function PagePruebas() {
  
  
   useEffect(() => {
-    console.log("Carrito actualizado:", carrito);
+    console.log("Carrito actualizado:", getVentas());
   }, [ ])
 
   return (

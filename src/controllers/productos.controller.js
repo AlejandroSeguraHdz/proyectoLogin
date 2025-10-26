@@ -126,8 +126,7 @@ export const getProductos = async (req, res) => {
     // Traer todos los productos activos
    /// const productos = await Producto.find({ activo: true });
     const productos = await Producto.find({ activo: true }).populate("categoria", "nombre codigo");
-    console.log("Se inprimen productos",productos)
-    // Preparar la respuesta: leer el archivo de imagen para cada producto
+     // Preparar la respuesta: leer el archivo de imagen para cada producto
     const productosConImagen = productos.map(producto => {
       return prepareProductResponse(producto);
     });
@@ -211,16 +210,13 @@ const prepareProductResponse = (producto) => {
 // controllers/producto.controller.js (o donde tengas la función)
 export const getProductoXCodigo = async (req, res) => {
   try {
-    console.log("entra")
-    // usar findOne para traer un solo documento
+     // usar findOne para traer un solo documento
     const producto = await Producto.findOne({ codigo: req.params.codigo });
-    console.log("primer producto", producto)
-    if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
+     if (!producto) return res.status(404).json({ message: "Producto no encontrado" });
     
     // Usamos la función auxiliar para leer el archivo de disco y preparar la respuesta
     const productoFinal = prepareProductResponse(producto);
-    console.log("entra", productoFinal)
-    // responder sólo los campos necesarios (incluye imagenDataUrl o null)
+     // responder sólo los campos necesarios (incluye imagenDataUrl o null)
     res.json(productoFinal);
 
   } catch (err) {

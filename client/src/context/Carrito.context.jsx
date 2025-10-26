@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { getVentasRequest, guardarVentaRequest } from "../api/Venta";
 
 const CarritoContext = createContext();
 
@@ -67,16 +68,37 @@ export function CarritoProvider({ children }) {
   const total = carrito.reduce((acc, it) => acc + (Number(it.precio) || 0) * (Number(it.cantidadEnCarrito) || 0), 0);
   const totalItems = carrito.reduce((acc, it) => acc + (Number(it.cantidadEnCarrito) || 0), 0);
 
+  const guardarVenta = async (datos) => {
+    try {
+      const res = await guardarVentaRequest(datos)
+      console.log(res)
+    } catch (error) {
+      console.log(errors)
+
+    }
+  }
+
+  const getVentas = async () =>{
+    try {
+      const res= getVentasRequest()
+      return res
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <CarritoContext.Provider
       value={{
         carrito,
+        total,
+        totalItems,
         addProducto,
         updateCantidad,
         removeProducto,
         clearCart,
-        total,
-        totalItems,
+        guardarVenta,
+        getVentas
       }}
     >
       {children}
