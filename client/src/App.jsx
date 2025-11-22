@@ -27,61 +27,81 @@ import PageCompras from "./pages/PageCompras.jsx"
 import PagePruebas from "./pages/PagePruebas.jsx"
 import PageVentas from "./pages/PageVentas.jsx"
 import { VentaProvider } from "./context/Venta.context.jsx"
+import PageMovimientos from "./pages/PageMovimientos.jsx";
+import { MovimientoProvider } from "./context/Movimiento.context.jsx";
+import AtajosVender from "./components/AtajosVender.jsx";
+
+import FormInventario from "./pages/FormInventario.jsx";
 
 function App() {
   return (
-    <AuthProvider>
-      <UsuarioProvider>
-        <VentaProvider>
-          <TaskProvider>
-            <ProductoProvider>
-              <CarritoProvider>
-                <CategoriaProvider>
-                  <BrowserRouter>
-                    <main className="container mx-auto px-10">
-                      <NavBar />
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/login" element={<LoginPage />} />
+    <BrowserRouter>
+
+      <AuthProvider>
+        <UsuarioProvider>
+          <ProductoProvider>
+            <CategoriaProvider>
+              <VentaProvider>
+                <TaskProvider>
+                     <MovimientoProvider>
+
+                      <CarritoProvider>
+                        <div className="flex">
+
+                          {/* SIDEBAR IZQUIERDO */}
+                          <NavBar />
+
+                          {/* CONTENIDO DE LA APP */}
+                          <main className="flex-1 p-5">
+                            <AtajosVender />
+                            <Routes>
+                              <Route path="/" element={<HomePage />} />
+                              <Route path="/login" element={<LoginPage />} />
+
+                              <Route element={<ProtectedRoute />}>
+                                <Route path="/register" element={<RegisterPage />} />
+                                <Route path="/task" element={<TaskPage />} />
+                                <Route path="/add-task" element={<TaskFormPage />} />
+                                <Route path="/task/:id" element={<TaskFormPage />} />
+                                <Route path="/profile" element={<ProfilePage />} />
+
+                                <Route path="/producto" element={<PageProductos />} />
+                                <Route path="/add-producto" element={<FormProductos />} />
+                                <Route path="/producto/:id" element={<FormProductos />} />
+                                <Route path="/productos-desactivados" element={<PaginaProductosDesactivados />} />
+                                <Route path="/producto-tabla" element={<PaginaProducto />} />
+                                <Route path="/producto-configurar/:id" element={<PaginaConfiguracionProducto />} />
+                                <Route path="/verMovimientos/:id" element={<PageMovimientos />} />
+                                <Route path="/inventario/:id" element={<FormInventario />} />
+
+                                <Route path="/categorias" element={<PageCategorias />} />
+                                <Route path="/add-categoria" element={<FormCategorias />} />
+                                <Route path="/categorias/:id" element={<FormCategorias />} />
+
+                                <Route path="/Lector" element={<PageLector />} />
+                                <Route path="/Usuarios" element={<PageUsuarios />} />
+
+                                <Route path="/compras" element={<PageCompras />} />
+                                <Route path="/pruebas" element={<PagePruebas />} />
+                                <Route path="/ventas" element={<PageVentas />} />
 
 
-                        <Route element={<ProtectedRoute />}>
-                          <Route path="/register" element={<RegisterPage />} />
+                              </Route>
 
-                          <Route path="/task" element={<TaskPage />} />
-                          <Route path="/add-task" element={<TaskFormPage />} />
-                          <Route path="/task/:id" element={<TaskFormPage />} />
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/producto" element={<PageProductos />} />
-                          <Route path="/add-producto" element={<FormProductos />} />
-                          <Route path="/producto/:id" element={<FormProductos />} />
-                          <Route path="/productos-desactivados" element={<PaginaProductosDesactivados />} />
-                          <Route path="/producto-tabla" element={<PaginaProducto />} />
-                          <Route path="/producto-configurar/:id" element={<PaginaConfiguracionProducto />} />
-                          <Route path="/categorias" element={<PageCategorias />} />
-                          <Route path="/add-categoria" element={<FormCategorias />} />
-                          <Route path="/categorias/:id" element={<FormCategorias />} />
-                          <Route path="/Lector" element={<PageLector />} />
-                          <Route path="/Usuarios" element={<PageUsuarios />} />
-                          <Route path="/compras" element={<PageCompras />} />
-                          <Route path="/pruebas" element={<PagePruebas />} />
-                          <Route path="/ventas" element={<PageVentas />} />
+                            </Routes>
+                          </main>
 
+                        </div>
 
-
-
-
-                        </Route>
-                      </Routes>
-                    </main>
-                  </BrowserRouter>
-                </CategoriaProvider>
-              </CarritoProvider>
-            </ProductoProvider>
-          </TaskProvider>
-        </VentaProvider>
-      </UsuarioProvider>
-    </AuthProvider>
+                      </CarritoProvider>
+                    </MovimientoProvider>
+                </TaskProvider>
+              </VentaProvider>
+            </CategoriaProvider>
+          </ProductoProvider>
+        </UsuarioProvider>
+      </AuthProvider>
+    </BrowserRouter>
 
   )
 }

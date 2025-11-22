@@ -19,22 +19,9 @@ function FormProductos() {
 
   useEffect(() => {
     const loadProducto = async () => {
-      getOnlyOneProducto(params.id)
 
       if (params.id) {
         await getOnlyOneProducto(params.id)
-        setValue('sku', producto.sku)
-        setValue('nombre', producto.nombre)
-        const catValue = producto.categoria && (producto.categoria._id ? producto.categoria._id : producto.categoria)
-        setValue('categoria', catValue)        
-        setValue('descripcion', producto.descripcion)
-        setValue('precio', producto.precio)
-        setValue('cantidad', producto.cantidad)
-        setValue('codigo', producto.codigo)
-        if (producto.imagen) {
-          // suponiendo que producto.imagen es la ruta relativa o url completa
-          setCurrentImageUrl(producto.imagen)
-        }
       }
     }
     loadProducto()
@@ -42,12 +29,32 @@ function FormProductos() {
   }, [])
 
 
+  useEffect(() => {
+
+
+
+    if (params.id) {
+
+      setValue('nombre', producto.nombre)
+      const catValue = producto.categoria && (producto.categoria._id ? producto.categoria._id : producto.categoria)
+      setValue('categoria', catValue)
+      setValue('descripcion', producto.descripcion)
+      setValue('precio', producto.precio)
+      setValue('cantidad', producto.cantidad)
+      setValue('codigo', producto.codigo)
+      if (producto.imagen) {
+        // suponiendo que producto.imagen es la ruta relativa o url completa
+        setCurrentImageUrl(producto.imagen)
+      }
+    }
+
+  }, [producto])
+
 
   const onSubmit = handleSubmit(async (data) => {
     console.log(data)
     // Construir FormData
     const formData = new FormData()
-    formData.append("sku", data.sku ?? "")
     formData.append("nombre", data.nombre ?? "")
     formData.append("categoria", data.categoria ?? "")
     formData.append("descripcion", data.descripcion ?? "")
@@ -66,7 +73,7 @@ function FormProductos() {
         navigate("/producto")
       } else {
         await createProducto(formData) // modificar en el contexto para aceptar FormData
-         navigate("/producto")
+        navigate("/producto")
       }
     } catch (error) {
       console.error(error)
@@ -82,9 +89,11 @@ function FormProductos() {
     <div className=" flex h-[calc(100vh-100px)] items-center justify-center" >
       <div className=" bg-zinc-800 max-w-md  w-full p-10 rounded-md">
         <form onSubmit={onSubmit} encType="multipart/form-data">
-          <label htmlFor="sku"> SKU</label>
-          <input type="text" placeholder="SKU" {...register("sku")} autoFocus className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2" />
 
+         <label htmlFor="codigo"> Codigo</label>
+          <input type="text" placeholder="Codigo" {...register("codigo")} className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2" />
+
+          
           <label htmlFor="nombre"> Nombre</label>
           <input type="text" placeholder="Nombre" {...register("nombre")} className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2" />
 
@@ -101,9 +110,7 @@ function FormProductos() {
                 </option>
               ))}
           </select>
-          <label htmlFor="codigo"> Codigo</label>
-          <input type="text" placeholder="Codigo" {...register("codigo")} className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2" />
-
+         
           <label htmlFor="descripcion"> Descripcion</label>
           <input type="text" placeholder="descripcion" {...register('descripcion')} className=" w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2" />
 

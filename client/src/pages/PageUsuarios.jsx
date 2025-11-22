@@ -12,6 +12,11 @@ function PageUsuarios() {
   const [sortBy, setSortBy] = useState("username"); // username | email | createdAt
   const [sortOrder, setSortOrder] = useState("asc"); // asc | desc
 
+useEffect (()=>{
+      getUsuarios();
+
+},[])
+
   useEffect(() => {
     getUsuarios();
     // eslint-disable-next-line react-hooks/exhaustive-deps

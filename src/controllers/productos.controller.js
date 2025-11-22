@@ -1,4 +1,7 @@
 import Producto from "../models/productos.model.js";
+import Log from "../models/Log.model.js";
+import  Movimiento  from "../models/MovimientosProdutos.model.js";
+
 // Importaciones necesarias para manejar archivos en disco
 import fs from 'fs';
 import path from 'path';
@@ -25,11 +28,11 @@ const deleteFileIfExists = (filePath) => {
 
 export const crearProducto = async (req, res) => {
     try {
-        const { sku, nombre, descripcion, codigo, precio, cantidad, categoria } = req.body;
+        const {  nombre, descripcion, codigo, precio, cantidad, categoria } = req.body;
 
         // Verificar si ya existe el SKU
-        const productFound = await Producto.findOne({ sku });
-        if (productFound) return res.status(400).json(["SKU ya registrado"]);
+        const productFound = await Producto.findOne({ codigo });
+        if (productFound) return res.status(400).json(["Codigo ya registrado"]);
 
     // Obtener la ruta del archivo si Multer lo ha guardado en disco
     let imagenPath = undefined;
@@ -45,10 +48,10 @@ export const crearProducto = async (req, res) => {
     }
 
     const nuevoProducto = new Producto({
-    sku,
-    nombre,
+            codigo,
+
+     nombre,
       descripcion,
-      codigo,
       precio,
       cantidad,
       categoria,
@@ -58,6 +61,21 @@ export const crearProducto = async (req, res) => {
 
 
     const npr = await nuevoProducto.save();
+/*
+    await Log.create({
+      tipo: "Creación de producto",
+      descripcion: `Se creó el producto "${npr.nombre}" con ID ${npr._id}`,
+    });*/
+
+    await Movimiento.create({
+        producto:npr._id,
+        tipo: "Alta",
+        cantidad: npr.cantidad,
+        cantidadAnterior: 0,
+        cantidadNueva:  npr.cantidad
+    });
+
+
     res.status(201).json(npr);
   } catch (error) {
     console.error("Error en crearProducto:", error);
@@ -65,7 +83,7 @@ export const crearProducto = async (req, res) => {
     if (req.file) {
         deleteFileIfExists(req.file.path); 
     }
-    res.status(500).json({ error: "Error al crear producto" });
+    res.status(500).json({ error });
   }
 };
 
@@ -87,13 +105,7 @@ export const updateProducto = async (req, res) => {
             res.status(400).json(["SKU ya registrado por otro producto"]);
         }
     }
-    // Si el body trae sku y es diferente, asegurar unicidad
-  /*  if (req.body.sku && req.body.sku !== producto.sku) {
-      const skuExist = await Producto.findOne({ sku: req.body.sku });
-      if (skuExist) return res.status(400).json(["SKU ya registrado por otro producto"]);
-    }*/
-
-    // Si subieron nueva imagen, reemplazar la imagen almacenada en el documento
+    
     if (req.file) {
       // Si el producto anterior tenía una imagen, intentamos borrarla del disco
       if (producto.imagen && typeof producto.imagen === "string") {
@@ -115,6 +127,16 @@ export const updateProducto = async (req, res) => {
     });
 
     const saved = await producto.save();
+
+    
+    await Movimiento.create({
+        producto:npr._id,
+        tipo: "Actualizacion",
+        cantidad: saved.cantidad,
+        cantidadAnterior: 0,
+        cantidadNueva:  npr.cantidad
+    });
+
     res.json(saved);
   } catch (error) {
     console.error("Error en updateProducto:", error);
@@ -261,3 +283,49 @@ export const activarProducto = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+
+export const ajustarInventario = async (req, res) => {
+
+   try {
+        const { codigo, cantidad, nuevaCantidad,comentarios } = req.body;
+
+        // Verificar datos mínimos
+        if (!codigo || nuevaCantidad === undefined) {
+            return res.status(400).json({ message: "Faltan datos" });
+        }
+        
+        // Buscar producto por código
+        const producto = await Producto.findOne({ codigo });
+
+        if (!producto) {
+            return res.status(404).json({ message: "Producto no encontrado" });
+        }
+
+    
+
+        // Actualizar cantidad
+        producto.cantidad = nuevaCantidad;
+
+        await producto.save();
+
+
+        await Movimiento.create({
+        producto:producto._id,
+        tipo: "Inventario",
+        cantidadAnterior: cantidad,
+        cantidadNueva:  nuevaCantidad,
+        comentarios:comentarios
+    });
+
+
+        res.status(200).json({
+            message: "Producto actualizado correctamente",
+            producto,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error del servidor" });
+    }
+}

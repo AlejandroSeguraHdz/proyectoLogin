@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const VentaItemSchema = new mongoose.Schema({
   productoId: { type: mongoose.Schema.Types.ObjectId, ref: "Producto", required: true },
-  sku: { type: String, required: true },               // snapshot
+  codigo: { type: String, required: true },               // snapshot
   nombre: { type: String, required: true },            // snapshot
   precioUnitario: { type: Number, required: true },    // precio al momento de la venta
   cantidad: { type: Number, required: true, min: 1 },

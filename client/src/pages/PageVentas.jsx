@@ -9,6 +9,20 @@ const getDate = (v) => {
   if (!raw) return "";
   try { return new Date(raw).toLocaleString("es-MX"); } catch { return String(raw); }
 };
+const getDateKey = (v) => {
+  // Devuelve YYYY-MM-DD en la zona local
+  const raw = v.createdAt?.$date ?? v.createdAt ?? v.fecha ?? null;
+  if (!raw) return "";
+  try {
+    const d = new Date(raw);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  } catch {
+    return String(raw).slice(0, 10);
+  }
+};
 const formatMoney = (n) => Number(n || 0).toFixed(2);
 
 // Componente pequeño para mostrar items en una tabla
@@ -19,7 +33,7 @@ function VentaItemsTable({ items }) {
       <table className="min-w-full text-sm">
         <thead>
           <tr className="text-left bg-zinc-800">
-            <th className="px-2 py-1">SKU</th>
+            <th className="px-2 py-1">Codigo</th>
             <th className="px-2 py-1">Nombre</th>
             <th className="px-2 py-1">Precio unitario</th>
             <th className="px-2 py-1">Cantidad</th>
@@ -29,7 +43,7 @@ function VentaItemsTable({ items }) {
         <tbody>
           {items.map((it, i) => (
             <tr key={i} className="border-t border-zinc-700">
-              <td className="px-2 py-1">{it.sku}</td>
+              <td className="px-2 py-1">{it.codigo}</td>
               <td className="px-2 py-1">{it.nombre}</td>
               <td className="px-2 py-1">${formatMoney(it.precioUnitario ?? it.precio ?? it.precioUnit)}</td>
               <td className="px-2 py-1">{it.cantidad}</td>
@@ -75,10 +89,25 @@ function PageVentas() {
     if (!q) return ventas || [];
     return (ventas || []).filter((v) => {
       const id = getId(v);
-      const itemsTxt = (v.items || []).map((it) => `${it.sku ?? ""} ${it.nombre ?? ""}`).join(" ");
+      const itemsTxt = (v.items || []).map((it) => `${it.codigo ?? ""} ${it.nombre ?? ""}`).join(" ");
       return [id, v.metodoPago ?? "", v.estado ?? "", itemsTxt].join(" ").toLowerCase().includes(q);
     });
   }, [ventas, query]);
+
+  // CALCULO: totales diarios basados en las ventas filtradas (la búsqueda afecta el resumen)
+  const dailyTotals = useMemo(() => {
+    const map = {}; // { '2025-11-11': { total: 123.45, count: 3 } }
+    (filtered || []).forEach((v) => {
+      const key = getDateKey(v) || "sin-fecha";
+      const t = Number(v.total) || 0;
+      if (!map[key]) map[key] = { total: 0, count: 0 };
+      map[key].total += t;
+      map[key].count += 1;
+    });
+    // convertir a array ordenado descendente por fecha
+    const arr = Object.keys(map).sort((a, b) => (a < b ? 1 : -1)).map((k) => ({ date: k, ...map[k] }));
+    return arr;
+  }, [filtered]);
 
   const totalPages = Math.max(1, Math.ceil((filtered || []).length / perPage));
   const pageItems = (filtered || []).slice((page - 1) * perPage, page * perPage);
@@ -92,14 +121,9 @@ function PageVentas() {
     // Aquí podrías llamar a API. Por ahora hacemos cambio local optimista.
     setError(null);
     try {
-      // si tu endpoint existe, llámalo aquí
-      // await updateEstadoVentaRequest(id, nuevo)
-      // actualizar localmente:
-      // (si getVentas recarga, mejor llamar al endpoint y recargar)
       const idx = (ventas || []).findIndex((v) => getId(v) === id);
       if (idx !== -1) {
         ventas[idx].estado = nuevo;
-        // Forzar re-render simple — si tu contexto actualiza estado con setVentas, úsalo desde el context.
         await getVentas(); // alternativa: recargar
       }
     } catch (err) {
@@ -117,7 +141,7 @@ function PageVentas() {
       const metodo = v.metodoPago ?? "";
       const estado = v.estado ?? "";
       const total = Number(v.total ?? 0).toFixed(2);
-      const items = (v.items || []).map((it) => `${it.sku}:${it.nombre}:${it.cantidad}`).join("|");
+      const items = (v.items || []).map((it) => `${it.codigo}:${it.nombre}:${it.cantidad}`).join("|");
       rows.push([id, fecha, metodo, estado, total, items]);
     });
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -129,6 +153,14 @@ function PageVentas() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const todayKey = (() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  })();
 
   return (
     <div className="p-4">
@@ -148,6 +180,30 @@ function PageVentas() {
       </div>
 
       {error && <div className="mb-2 text-red-500">{error}</div>}
+
+      {/* RESUMEN: Totales diarios */}
+      <div className="mb-3">
+        <div className="text-sm text-gray-400 mb-1">Totales diarios (sobre resultados actuales):</div>
+        <div className="flex gap-2 overflow-x-auto py-1">
+          {dailyTotals.length === 0 ? (
+            <div className="text-sm text-gray-500 px-2">No hay ventas para mostrar totales diarios.</div>
+          ) : (
+            dailyTotals.map((d) => {
+              const isToday = d.date === todayKey;
+              return (
+                <div
+                  key={d.date}
+                  className={`min-w-[160px] p-2 rounded border ${isToday ? "bg-green-700/30 border-green-600" : "bg-zinc-800 border-zinc-700"}`}
+                >
+                  <div className="text-xs text-gray-300">{d.date}</div>
+                  <div className="text-lg font-semibold">${formatMoney(d.total)}</div>
+                  <div className="text-xs text-gray-400">{d.count} venta{d.count !== 1 ? "s" : ""}</div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
       <div className="overflow-x-auto bg-zinc-900 rounded p-2 text-white">
         <table className="min-w-full text-sm">
@@ -250,4 +306,4 @@ function PageVentas() {
   );
 }
 
-export default PageVentas
+export default PageVentas;

@@ -9,6 +9,7 @@ import rutasCategorias from "./routes/categorias.routes.js"
 import rutasUsuario from "./routes/usuarios.routes.js"
 import rutasVentas from "./routes/ventas.routes.js"
 
+import rutasMovimientos from "./routes/movimientos.routes.js";
 import { FRONTEND_URL } from "./config.js";
 
 const app = express()
@@ -36,5 +37,6 @@ app.use("/api",rutasProductos)
 app.use("/api",rutasCategorias)
 app.use("/api",rutasUsuario)
 app.use("/api",rutasVentas)
+app.use("/api",rutasMovimientos)
 
 export default app;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { createProductoRequest, deleteProductoRequest, getProductosRequest, getProductoRequest, updateProductoRequest, getProductosDesactivadosRequest, activarProductoRequest, getProductoXCodigoRequest } from "../api/Producto";
+import { createProductoRequest, deleteProductoRequest, getProductosRequest, getProductoRequest, updateProductoRequest, getProductosDesactivadosRequest, activarProductoRequest, getProductoXCodigoRequest, inventarioRequest } from "../api/Producto";
 const ProductoContext = createContext();
 
 export const useProducto = () => {
@@ -117,6 +117,19 @@ export function ProductoProvider({ children }) {
         }
     };
 
+
+    const inventario = async (productoFormData) => {
+        try {
+             const res = await inventarioRequest(productoFormData);
+            // opcional: refrescar lista
+            await getProductos();
+            return res.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    };
+
  
     return (
         <ProductoContext.Provider
@@ -130,7 +143,8 @@ export function ProductoProvider({ children }) {
                 updateProducto,
                 getProductosDesactivados,
                 activarProducto,
-                getProductoXCodigo
+                getProductoXCodigo,
+                inventario
             }}
         >
             {children}

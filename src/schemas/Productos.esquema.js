@@ -1,10 +1,8 @@
 import mongoose from 'mongoose';
 
 export const esquemaRegistrarProducto = new mongoose.Schema({
-  sku: {
+ codigo: {
     type: String,
-    required: true,
-    unique: true
   },
   nombre: {
     type: String,
@@ -13,9 +11,7 @@ export const esquemaRegistrarProducto = new mongoose.Schema({
   descripcion: {
     type: String,
   },
-  codigo: {
-    type: String,
-  },
+ 
   // Cambiado: guardamos el binario en Buffer y el tipo MIME
  // CAMBIO CLAVE: Ahora almacena la RUTA del archivo en el disco (ej: "/uploads/123456.jpg")
     imagen: {

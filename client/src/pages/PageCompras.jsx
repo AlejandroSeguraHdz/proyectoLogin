@@ -3,8 +3,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useProducto } from "../context/Producto.context";
 import { useCarrito } from "../context/Carrito.context";
+import { useAuth } from "../context/Auth.context";
 
 function PageCompras() {
+  const { isAuthenticated, logOut, user } = useAuth()
+  
   const { carrito, addProducto, updateCantidad, removeProducto, clearCart, total, totalItems, guardarVenta } = useCarrito();
   const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: { codigo: "", cantidad: 1, metodoPago: "efectivo" },
@@ -17,6 +20,7 @@ function PageCompras() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
+      console.log("Producto agregador por: ",user.nombres)
       const codigo = data.codigo?.trim();
       let cantidad = Number(data.cantidad) || 1;
       if (!codigo) return;
@@ -59,7 +63,7 @@ function PageCompras() {
         return productoId
           ? {
               productoId,
-              sku: it.raw?.sku || it.codigo || "",
+              codigo: it.raw?.codigo || it.codigo || "",
               nombre: it.nombre || "Sin nombre",
               precioUnitario,
               cantidad,

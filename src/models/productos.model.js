@@ -2,13 +2,12 @@
 import mongoose from 'mongoose'
 
 const esquemaProducto = new mongoose.Schema({
-  sku: { type: String, required: true, unique: true },
+  codigo: { type: String, required: true, unique: true },
   nombre: { type: String, required: true },
   descripcion: { type: String },
   imagen: { type: String },
   imagenMimeType: { type: String },
-  codigo: { type: String },
-  precio: { type: mongoose.Schema.Types.Double },
+  precio: { type:Number },
   cantidad: { type: Number, required: true },
   activo: { type: Boolean, required: true, default: true },
 
@@ -16,7 +15,7 @@ const esquemaProducto = new mongoose.Schema({
   categoria: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Categoria",
-    required: false // poner true si quieres exigir categoría
+    required: true
   }
 
 }, {

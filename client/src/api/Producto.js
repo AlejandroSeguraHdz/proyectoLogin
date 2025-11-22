@@ -12,6 +12,7 @@ export const  getProductoXCodigoRequest = async (codigo) => axios.get(`/producto
 
 
 export const createProductoRequest = async (formData) =>  axios.post("/producto", formData);
+export const inventarioRequest = async (formData) =>  axios.post("/inventario", formData);
 
 export const updateProductoRequest = (id, formData) => {
   return axios.put(`producto/${id}`, formData);

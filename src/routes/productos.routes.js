@@ -11,7 +11,8 @@ import {
   getProductos,
   getProductosDesactivados,
   updateProducto,
-  getProductoXCodigo
+  getProductoXCodigo,
+  ajustarInventario
 } from "../controllers/productos.controller.js";
 import { authRequired } from "../middlewares/validateToken.js";
 
@@ -41,5 +42,8 @@ router.get("/productos-desactivados", authRequired, getProductosDesactivados);
 router.delete("/activar-producto/:id", authRequired, activarProducto);
 
 router.get("/producto-codigo/:codigo", authRequired, getProductoXCodigo);
+
+
+router.post("/inventario",  ajustarInventario);
 
 export default router;
